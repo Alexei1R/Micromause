@@ -18,11 +18,11 @@ void Motor::MotorUpdate(int speed, MotorDirection direction)
 
     switch (direction)
     {
-    case MotorDirection::FORWARD:
+    case MotorDirection::BACKWARD:
         analogWrite(pin1, speed);
         analogWrite(pin2, LOW);
         break;
-    case MotorDirection::BACKWARD:
+    case MotorDirection::FORWARD:
         analogWrite(pin1, LOW);
         analogWrite(pin2, speed);
         break;
