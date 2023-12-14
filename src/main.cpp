@@ -1,89 +1,79 @@
 #include <Arduino.h>
-#include "distance/distance.h"
-#include "l293d/motor.h"
+#include "main.h"
+#include "GyverPID.h"
 
-#define TRIG_PIN1 15
-#define ECHO_PIN1 17
-#define TRIG_PIN2 6
-#define ECHO_PIN2 8
-#define TRIG_PIN3 10
-#define ECHO_PIN3 12
-#define TRIG_PIN4 14
-#define ECHO_PIN4 16
+GyverPID regulator(5,0.03, 0.5, 10);
 
-
-#define MOTOR_A_IN1 3
-#define MOTOR_A_IN2 5
-
-#define MOTOR_B_IN1 7
-#define MOTOR_B_IN2 9
-
-#define MIN_DISTANCE 15 
-
-unsigned long previousMillis = 0;
-unsigned long motorUpdateMillis = 0;
-const long interval = 10;
-const long motorInterval = 100; // Interval for motor update
-int sensorIndex = 0;
-int motorSpeed = 0;
-
-float leftMotor = 0.0;
-float frontMotor = 0.0;
-float rightMotor = 0.0;
-float backMotor = 0.0;
-
-String data = "";
-
-SENSOR ultrasonicSensors[4] = {
-  SENSOR(TRIG_PIN1, ECHO_PIN1),
-  SENSOR(TRIG_PIN2, ECHO_PIN2),
-  SENSOR(TRIG_PIN3, ECHO_PIN3),
-  SENSOR(TRIG_PIN4, ECHO_PIN4)
-};
-
-Motor motorA(MOTOR_A_IN1, MOTOR_A_IN2);
-Motor motorB(MOTOR_B_IN1, MOTOR_B_IN2);
 
 void setup() {
   Serial.begin(9600);
-}
 
+  regulator.setDirection(NORMAL); 
+  regulator.setLimits(-50, 50);
+  regulator.setpoint = 0;
+
+
+
+}
 void loop() {
   unsigned long currentMillis = millis();
 
-  // Sensor update logic
   if (currentMillis - previousMillis >= interval) {
     previousMillis = currentMillis;
     float distance = ultrasonicSensors[sensorIndex].dist();
-    switch(sensorIndex) {
-      case 0: leftMotor = distance; break;
-      case 1: frontMotor = distance; break;
-      case 2: rightMotor = distance; break;
-      case 3: backMotor = distance; break;
+    if (sensorIndex == 0 || sensorIndex == 2) {
+      if (sensorIndex == 0) {
+        leftSensor = distance;
+      } else {
+        rightSensor = distance;
+      }
+
+      sensorIndex++;
+    } else {
+      if (sensorIndex == 1) {
+        frontSensor = distance;
+      } else {
+        backSensor = distance;
+      }
+
+      sensorIndex = (sensorIndex + 1) % 4;
     }
-    sensorIndex = (sensorIndex + 1) % 4;
-    data = "#" + String(leftMotor) + "," + String(frontMotor) + "," + String(rightMotor) + "," + String(backMotor) + "%";
-    Serial.print(data);
+  }
+
+
+  regulator.input  = leftSensor - rightSensor;
+  resultpidside = regulator.getResultTimer();
+
+  if (frontSensor > MIN_DISTANCE) {
+    baseSpeed = 150;
+  } else {
+    baseSpeed = 0;
   }
 
   
-  // if (currentMillis - motorUpdateMillis >= motorInterval) {
-  //   motorUpdateMillis = currentMillis;
-  //   if (frontMotor > MIN_DISTANCE) {
-  //     motorA.MotorUpdate(100, MotorDirection::FORWARD); 
-  //     motorB.MotorUpdate(100, MotorDirection::FORWARD);
-  //   }
-  //   else if (backMotor > MIN_DISTANCE) {
-  //     motorA.MotorUpdate(100, MotorDirection::BACKWARD);
-  //     motorB.MotorUpdate(100, MotorDirection::BACKWARD);
-  //   }
-  //   else {
-  //     motorA.MotorUpdate(0, MotorDirection::FORWARD); 
-  //     motorB.MotorUpdate(0, MotorDirection::FORWARD);
-  //   }
-  // }
+  if( resultpidside > 2){
+    
+    moveLeft = abs(resultpidside);
+    moveRight =0;
+  } 
+  
+  if(resultpidside < 2) {
+    moveRight = abs(resultpidside);
+    moveLeft = 0;
+  }
 
+  motorA.MotorUpdate(baseSpeed +  moveLeft*2, MotorDirection::FORWARD);
+  motorB.MotorUpdate(baseSpeed + moveRight*2, MotorDirection::FORWARD);
+  
+  
 
+  // motorA.MotorUpdate(150 , MotorDirection::FORWARD);
+  // motorB.MotorUpdate(150 , MotorDirection::FORWARD);
+  
+  
 
+ data = "#" + String(leftSensor) + "," + String(frontSensor) + "," + String(rightSensor) + "," + String(backSensor) + "," + String(resultpidside) + "," + String(moveLeft) + "," + String(moveRight) + "%";
+
+Serial.print(data);
 
 }

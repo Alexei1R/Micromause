@@ -13,7 +13,10 @@ Motor::Motor(int pin1, int pin2)
 void Motor::MotorUpdate(int speed, MotorDirection direction)
 {
     //map speed between 0 and 255
-    speed = map(speed, 0, 100, 0, 255);
+    // speed = map(speed, 0, 100, 0, 255);
+
+    //make shure speed is between 0 and 255
+    speed = constrain(speed, 0, 255);
     
 
     switch (direction)

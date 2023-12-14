@@ -1,71 +1,71 @@
-#pragma once
 #include <Arduino.h>
+#include "main.h"
+#include "GyverPID.h"
 
-#define dist_of_trig 85  // distance of trig
-#define resp_time 400    // sensor response time (return true not less than 400 ms)
+GyverPID regulator(1 ,0.01, 0.05, 10);
 
-//----------------------------------------------------- Class -----------------------------------------------------
-class SENSOR {
-  //-------------------------------- Methodes --------------------------------
-public:
-  SENSOR(int out, int echo);  // initialisation class SENSOR (trig pin , echo pin)
-  float dist();// const;         // return curent distance of element 0
 
-  bool check();
-  //-------------------------------- Methodes --------------------------------
-  //------------------------------- Parameters -------------------------------
-private:
-  int _out;   // out pin
-  int _echo;  // echo pin list
+void setup() {
+  Serial.begin(9600);
 
-  uint32_t _tmr;
-  bool _flag;
-  //------------------------------- Parameters -------------------------------
-};
-//----------------------------------------------------- Class -----------------------------------------------------
+  regulator.setDirection(NORMAL); 
+  regulator.setLimits(-50, 50);
+  regulator.setpoint = 0;
 
-//--------------------------------------------------- Methodes ----------------------------------------------------
-SENSOR::SENSOR(int out, int echo) {
-  _out = out;
-  _echo = echo;
-  pinMode(_out, OUTPUT);
-  pinMode(_echo, INPUT);
+
+
 }
+void loop() {
+  unsigned long currentMillis = millis();
 
-bool SENSOR::check() {
-  bool btnState;
-  if (dist() < dist_of_trig) {
-  // if (!digitalRead(_echo)) {
-    btnState = false;
-    // Serial.println("         false ");
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
+    float distance = ultrasonicSensors[sensorIndex].dist();
+    if (sensorIndex == 0 || sensorIndex == 2) {
+      if (sensorIndex == 0) {
+        leftSensor = distance;
+      } else {
+        rightSensor = distance;
+      }
+
+      sensorIndex++;
+    } else {
+      if (sensorIndex == 1) {
+        frontSensor = distance;
+      } else {
+        backSensor = distance;
+      }
+
+      sensorIndex = (sensorIndex + 1) % 4;
+    }
+  }
+
+
+  regulator.input  = leftSensor - rightSensor;
+  resultpidside = regulator.getResultTimer();
+
+  if (frontSensor > MIN_DISTANCE) {
+    baseSpeed = 200;
   } else {
-    btnState = true;
-    // Serial.println("true ");
+    baseSpeed = 0;
   }
-  if (!btnState && !_flag && millis() - _tmr >= resp_time) {
-    _flag = true;
-    _tmr = millis();
-    return true;
-  }
-  if (btnState && _flag) {
-    _flag = false;
-    _tmr = millis();
-  }
-  return false;
-}
 
-//---------------------------
-float SENSOR::dist() {//const {
-  digitalWrite(_out, LOW);
-  delayMicroseconds(2);
-  digitalWrite(_out, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(_out, LOW);
-  noInterrupts();
-  float d = pulseIn(_echo, HIGH, 23529.4);  // max sensor dist ~4m
-  interrupts();
-  //  delay(1);
-  Serial.println(d / 58.8235);
-  return d / 58.8235;
+  if( resultpidside < 0){
+    moveLeft = abs(resultpidside);
+  } else {
+    moveRight = abs(resultpidside);
+  }
+
+  motorA.MotorUpdate(baseSpeed + moveLeft , MotorDirection::FORWARD);
+  motorB.MotorUpdate(baseSpeed + moveRight, MotorDirection::FORWARD);
+  
+  
+  
+  
+
+ data = "#" + String(leftSensor) + "," + String(frontSensor) + "," + String(rightSensor) + "," + String(backSensor) + "," + String(resultpidside) + "%";
+
+Serial.print(data);
+delay(10);
+
 }
-//--------------------------------------------------- Methodes ----------------------------------------------------
