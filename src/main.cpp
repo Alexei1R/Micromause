@@ -2,7 +2,8 @@
 #include "main.h"
 #include "GyverPID.h"
 
-GyverPID regulator(5,0.03, 0.5, 10);
+GyverPID regulator(5, 0.03, 0.5, 10);
+
 
 
 void setup() {
@@ -18,30 +19,46 @@ void setup() {
 void loop() {
   unsigned long currentMillis = millis();
 
-  if (currentMillis - previousMillis >= interval) {
-    previousMillis = currentMillis;
-    float distance = ultrasonicSensors[sensorIndex].dist();
-    if (sensorIndex == 0 || sensorIndex == 2) {
-      if (sensorIndex == 0) {
-        leftSensor = distance;
-      } else {
-        rightSensor = distance;
-      }
+  
 
-      sensorIndex++;
-    } else {
-      if (sensorIndex == 1) {
-        frontSensor = distance;
-      } else {
-        backSensor = distance;
-      }
+  leftSensor = ultrasonicSensors[0].dist();
+  frontSensor = ultrasonicSensors[1].dist();
+  rightSensor = ultrasonicSensors[2].dist();
+  backSensor = ultrasonicSensors[3].dist();
 
-      sensorIndex = (sensorIndex + 1) % 4;
-    }
+  if (leftSensor > 100) {
+    leftSensor = 100;
+  }
+  if (frontSensor > 100) {
+    frontSensor = 100;
+  }
+  if (rightSensor > 100) {
+    rightSensor = 100;
+  }
+  if (backSensor > 100) {
+    backSensor = 100;
+  }
+
+  
+  if(leftSensor <= 15 && rightSensor <= 15) {
+    regulator.input = leftSensor - rightSensor;
+  }
+  if (rightSensor > 17 && leftSensor <= 15) {
+    regulator.input = -(9 - leftSensor); 
+  } 
+
+  if (leftSensor > 17 && rightSensor <= 15) {
+    regulator.input = -( rightSensor - 3); 
   }
 
 
-  regulator.input  = leftSensor - rightSensor;
+  
+
+
+
+
+
+  
   resultpidside = regulator.getResultTimer();
 
   if (frontSensor > MIN_DISTANCE) {
@@ -62,18 +79,20 @@ void loop() {
     moveLeft = 0;
   }
 
-  motorA.MotorUpdate(baseSpeed +  moveLeft*2, MotorDirection::FORWARD);
-  motorB.MotorUpdate(baseSpeed + moveRight*2, MotorDirection::FORWARD);
-  
+    motorA.MotorUpdate(baseSpeed +  moveLeft*2, MotorDirection::FORWARD);
+    motorB.MotorUpdate(baseSpeed + moveRight*2, MotorDirection::FORWARD);
   
 
-  // motorA.MotorUpdate(150 , MotorDirection::FORWARD);
-  // motorB.MotorUpdate(150 , MotorDirection::FORWARD);
-  
+
+
+
   
 
  data = "#" + String(leftSensor) + "," + String(frontSensor) + "," + String(rightSensor) + "," + String(backSensor) + "," + String(resultpidside) + "," + String(moveLeft) + "," + String(moveRight) + "%";
 
-Serial.print(data);
+Serial.println(data);
 
 }
+
+
+  

@@ -2,7 +2,8 @@
 #include "main.h"
 #include "GyverPID.h"
 
-GyverPID regulator(1 ,0.01, 0.05, 10);
+GyverPID regulator(5, 0.03, 0.5, 10);
+
 
 
 void setup() {
@@ -40,32 +41,51 @@ void loop() {
     }
   }
 
+  
 
-  regulator.input  = leftSensor - rightSensor;
+  if(leftSensor <= 15 || rightSensor <= 15){
+    regulator.input = leftSensor - rightSensor;
+  }
+
+
+
+
+
+
+  
   resultpidside = regulator.getResultTimer();
 
   if (frontSensor > MIN_DISTANCE) {
-    baseSpeed = 200;
+    baseSpeed = 150;
   } else {
     baseSpeed = 0;
   }
 
-  if( resultpidside < 0){
+  
+  if( resultpidside > 2){
+    
     moveLeft = abs(resultpidside);
-  } else {
+    moveRight =0;
+  } 
+  
+  if(resultpidside < 2) {
     moveRight = abs(resultpidside);
+    moveLeft = 0;
   }
 
-  motorA.MotorUpdate(baseSpeed + moveLeft , MotorDirection::FORWARD);
-  motorB.MotorUpdate(baseSpeed + moveRight, MotorDirection::FORWARD);
-  
-  
-  
+    motorA.MotorUpdate(baseSpeed +  moveLeft*2, MotorDirection::FORWARD);
+    motorB.MotorUpdate(baseSpeed + moveRight*2, MotorDirection::FORWARD);
   
 
- data = "#" + String(leftSensor) + "," + String(frontSensor) + "," + String(rightSensor) + "," + String(backSensor) + "," + String(resultpidside) + "%";
+
+
+
+  
+
+ data = "#" + String(leftSensor) + "," + String(frontSensor) + "," + String(rightSensor) + "," + String(backSensor) + "," + String(resultpidside) + "," + String(moveLeft) + "," + String(moveRight) + "%";
 
 Serial.print(data);
-delay(10);
 
 }
+
+

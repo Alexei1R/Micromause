@@ -26,7 +26,7 @@
 
 unsigned long previousMillis = 0;
 unsigned long motorUpdateMillis = 0;
-const long interval = 10;
+const long interval = 1;
 const long motorInterval = 100; // Interval for motor update
 int sensorIndex = 0;
 int motorSpeed = 0;
@@ -59,4 +59,5 @@ SENSOR ultrasonicSensors[4] = {
 
 Motor motorA(MOTOR_A_IN1, MOTOR_A_IN2);
 Motor motorB(MOTOR_B_IN1, MOTOR_B_IN2);
+
 
