@@ -48,6 +48,25 @@ int  baseSpeed = 0;
 int moveLeft = 0;
 int moveRight = 0;
 
+bool turnLeft = false;
+bool turnRight = false;
+bool turnAround = false;
+bool hastoTurn = false;
+
+int newLeft = 0;
+int newRight = 0;
+int newFront = 0;
+int newBack = 0;
+
+bool hasToTurn = false;
+bool whileTurn = true;
+
+
+float leftbeforeTurn = 0;
+float rightbeforeTurn = 0;
+float frontbeforeTurn = 0;
+float backbeforeTurn = 0;
+
 
 
 SENSOR ultrasonicSensors[4] = {
