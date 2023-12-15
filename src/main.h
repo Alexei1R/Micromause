@@ -21,7 +21,7 @@
 #define MOTOR_B_IN1 9
 #define MOTOR_B_IN2 7
 
-#define MIN_DISTANCE 15 
+#define MIN_DISTANCE 20
 
 
 unsigned long previousMillis = 0;
@@ -53,6 +53,8 @@ bool turnRight = false;
 bool turnAround = false;
 bool hastoTurn = false;
 
+
+    bool tunrning = true;
 int newLeft = 0;
 int newRight = 0;
 int newFront = 0;
